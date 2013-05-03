@@ -1,0 +1,6 @@
+Name: Gurux.Communication
+Description: Gurux.Communication
+Version: 0.1
+
+Requires: 
+Libs: -r:/usr/lib/gurux-communication/Gurux.Communication.dll
