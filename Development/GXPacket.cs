@@ -65,7 +65,7 @@ namespace Gurux.Communication
         private readonly object m_sync = new object();
 
         /// <summary>
-        /// Packet is create using GXClient
+        /// Packet is created using GXClient's CreatePacket -method.
         /// </summary>
         internal GXPacket()
         {
@@ -300,6 +300,7 @@ namespace Gurux.Communication
         /// </example>
         /// <seealso href="GXPacketExtractHeader">ExtractHeader</seealso>
         /// <seealso href="GXPacketExtractPacket">ExtractPacket</seealso>
+        /// <returns>Object as given type from the byte array.</returns>
         public object ExtractData(Type type, int index, int count)
         {
             if (type == null || type == Type.Missing)
@@ -951,7 +952,7 @@ namespace Gurux.Communication
         /// If value is more than 0, it determines how many times packet is tried to resend.
         /// </remarks>
         /// <seealso href="ResendCount">GXClient.ResendCount</seealso> 
-        /// <seealso href="P_Gurux_Packet_GXPacket_WaitTime">WaitTime</seealso>
+        /// <seealso href="GXPacket.WaitTime">GXPacket.WaitTime</seealso>
         [DefaultValue(0)]
         public int ResendCount
         {
@@ -1021,8 +1022,8 @@ namespace Gurux.Communication
         /// To use WaitTime of GXClient, set WaitTime of the GXPacket to -2. 
         /// If set to -1, waiting time is infinite.  
         /// </remarks>
-        /// <seealso href="P_Gurux_Packet_GXPacket_ResendCount">ResendCount</seealso> 
-        /// <seealso href="WaitTime">GXClient.WaitTime</seealso>           
+        /// <seealso href="GXPacketResendCount">ResendCount</seealso> 
+        /// <seealso href="GXClient.WaitTime">GXClient.WaitTime</seealso>           
         public int WaitTime
         {
             get

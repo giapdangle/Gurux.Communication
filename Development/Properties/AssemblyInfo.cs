@@ -54,7 +54,7 @@ using System.Runtime.InteropServices;
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("f3453892-0a65-40d7-84d4-2e0ebeb92ba0")]
 [assembly: AssemblyVersion("7.0.2.1")] //DO NOT CHANGE!
-[assembly: AssemblyFileVersion("7.0.8.1")]
+[assembly: AssemblyFileVersion("7.0.9.1")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Gurux.Device, PublicKey=0024000004800000940000000602000000240000525341310004000001000100656993d23e652554c2f0e03588aaaa2d4ce225ebec0b8723f0f8cae2d77222db2cb76ccb4accc3c5eccdf9f35b389950f214d33d165a04bebbafb5376818bf2f8930428b1dded90c318ffabd947a41f57c4c8059cee788916eac94288f6aa85479ed7167e0234e9cd2bd77968b24882fe0793793aec835bfabd5ffdbcb3ad8a4")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Gurux.DeviceUICtrls, PublicKey=0024000004800000940000000602000000240000525341310004000001000100a16866c091857912807031cc14bb1b4e20b4156713035ec038729418c81087337124f581eebddad0d06209c4d5b29da91203e2b461cd72a34620de3724c44fdaa331839f9695101e7b4a12b1615881e5ec164b175954d868a367c3e999871fa99fa225ba98ebb956f93205cd1a18a8718ac9701b26e75205c88a180403591aae")]
 [assembly: System.Resources.NeutralResourcesLanguage("en")]

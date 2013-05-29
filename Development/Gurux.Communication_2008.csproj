@@ -65,6 +65,7 @@
     <Compile Include="GXServerSender.cs" />
     <Compile Include="GXStatistics.cs" />
     <Compile Include="IGXPacketParser.cs" />
+    <Compile Include="NamespaceDoc.cs" />
     <Compile Include="PacketParts.cs" />
     <Compile Include="PacketStates.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

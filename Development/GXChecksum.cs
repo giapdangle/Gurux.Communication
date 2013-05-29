@@ -46,7 +46,7 @@ namespace Gurux.Communication
     /// Parameters CRCSize, CRCPolynomial, CRCInitialValue, CRCFinalXOR, CRCReverseData and/or CRCReflection 
     /// can be used only, when checksum type is Custom (GX_CHK_CUSTOM).
     /// </remarks>
-    /// <seealso href="M_Gurux_Client_GXClient_SetChecksumParameters">GXClient.SetChecksumParameters</seealso>
+    /// <seealso href="GXClient.SetChecksumParameters">GXClient.SetChecksumParameters</seealso>
     /// <seealso href="GXPacketCountChecksum">CountChecksum</seealso>
     [DataContract()]
     public class GXChecksum

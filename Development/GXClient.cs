@@ -373,7 +373,7 @@ namespace Gurux.Communication
                     NotifyChange("Eop");
                 }
             }
-        }       
+        }
 
         /// <summary>
         /// Shows and changes the properties of the active media.
@@ -384,6 +384,7 @@ namespace Gurux.Communication
         /// </remarks>
         /// <param name="parentWindow">Owner window of the Properties dialog.</param>
         /// <seealso cref="SelectMedia">SelectMedia</seealso> 
+        /// <returns>Returns True if user has accect changes. Otherwice false.</returns>
         public bool MediaProperties(System.Windows.Forms.Form parentWindow)
         {
             if (this.Media is Gurux.Common.IGXMedia)
@@ -406,6 +407,7 @@ namespace Gurux.Communication
         /// <param name="showMediaProperties">If True, media properties are shown.</param>
         /// <param name="parentWindow">Owner window of the Properties dialog.</param>
         /// <seealso cref="SelectMedia">SelectMedia</seealso> 
+        /// <returns>Returns True if user has accect changes. Otherwice false.</returns>
         public bool Properties(System.Windows.Forms.Form parentWindow, bool showMediaProperties)
         {
             return false;//TODO:
@@ -431,11 +433,11 @@ namespace Gurux.Communication
         /// </summary>
         /// <param name="mediaType">Name of selected Media.</param>
         /// <example>
-        /// <code lang="vbscript">
+        /// <code lang="csharp">
         /// 'Select Network Media
-        /// GXClient1.SelectMedia "Net"
+        /// media = GXClient1.SelectMedia("Net");
         /// 'Select Serial Media
-        /// GXClient1.SelectMedia "Serial"
+        /// media = GXClient1.SelectMedia("Serial");
         /// </code>
         /// </example>
         /// <remarks>
@@ -444,6 +446,7 @@ namespace Gurux.Communication
         /// </remarks>
         /// <seealso cref="Properties">Properties</seealso> 
         /// <seealso cref="AssignMedia">AssignMedia</seealso> 
+        /// <returns>Returns True if user has accect changes. Otherwice false.</returns>
         public Gurux.Common.IGXMedia SelectMedia(string mediaType)
         {
             mediaType = mediaType.ToLower();
@@ -783,7 +786,7 @@ namespace Gurux.Communication
         /// <summary>
         /// Creates default packet with client settings.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>New packet with client settings.</returns>        
         public GXPacket CreatePacket()
         {
             GXPacket packet;
@@ -931,7 +934,8 @@ namespace Gurux.Communication
 
         /// <summary>
         /// Creates a copy of the client.
-        /// </summary>		
+        /// </summary>
+        /// <returns>Cloned client.</returns>
         public GXClient Clone()
         {
             GXClient client = new GXClient();
@@ -1213,7 +1217,7 @@ namespace Gurux.Communication
             }
         }
 
-        /// <inheritdoc cref="TraceEventHandler"/>
+        /// <inheritdoc cref="Gurux.Common.TraceEventHandler"/>
         [Description("Called when the GXClient is sending or receiving data.")]
         public event TraceEventHandler OnTrace
         {
@@ -1488,6 +1492,9 @@ namespace Gurux.Communication
 
         #region IDisposable Members
 
+        /// <summary>
+        /// Close connection to the meter if latest client.
+        /// </summary>
         public void Dispose()
         {
             CloseServer();
