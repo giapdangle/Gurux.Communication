@@ -58,7 +58,10 @@ namespace Gurux.Communication
 							{
 								Gurux.Common.GXCommon.TraceWriteLine("Reply packet received in " + (DateTime.Now - it.SendTime).TotalMilliseconds.ToString() + " ms.");
 							}
-                            it.Sender.NotifyReceived(new GXReceivedPacketEventArgs(it, true));
+                            if (it.Sender != null)
+                            {
+                                it.Sender.NotifyReceived(new GXReceivedPacketEventArgs(it, true));
+                            }
                         }
                     }
                 }

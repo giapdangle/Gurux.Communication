@@ -307,7 +307,7 @@ namespace Gurux.Communication
             {
                 throw new ArgumentOutOfRangeException("type");
             }
-            if (count == 0)
+            if (count == 0 || m_Data.Count < count)
             {
                 throw new ArgumentOutOfRangeException("count");
             }
