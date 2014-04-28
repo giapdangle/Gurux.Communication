@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Gurux.Common;
+using Gurux.Communication.Properties;
 
 namespace Gurux.Communication
 {
     class GXServerReceiver
     {
         public EventWaitHandle Closing = new EventWaitHandle(false, EventResetMode.ManualReset);
-        GXServer Parent;
-		System.Diagnostics.TraceLevel Trace = System.Diagnostics.TraceLevel.Off;
+        GXServer Parent;		
 		/// <summary>
         /// Constructor.
         /// </summary>
@@ -18,21 +19,9 @@ namespace Gurux.Communication
         public GXServerReceiver(GXServer parent)
         {
             Parent = parent;
-			if (Parent.Media != null)
-			{
-				Trace = Parent.Media.Trace;
-			}
-			else
-			{
-				Trace = System.Diagnostics.TraceLevel.Off;
-			}
         }
         public void Run()
         {
-			if (Trace >= System.Diagnostics.TraceLevel.Info)
-			{
-				Gurux.Common.GXCommon.TraceWriteLine("GXServer receiver started.");
-			}
             while (EventWaitHandle.WaitAny(new EventWaitHandle[] { Closing, Parent.m_ReceicedPacketsAdded}) != 0)
             {
                 try
@@ -54,10 +43,13 @@ namespace Gurux.Communication
                                 //Remove the packet from the send list
                                 Parent.m_SendPackets.Remove(it);
                             }
-							if (Trace >= System.Diagnostics.TraceLevel.Info)
-							{
-								Gurux.Common.GXCommon.TraceWriteLine("Reply packet received in " + (DateTime.Now - it.SendTime).TotalMilliseconds.ToString() + " ms.");
-							}
+                            byte[] data = it.ExtractPacket();
+                            foreach (GXClient cl in Parent.Clients)
+                            {
+                                cl.NotifyVerbose(cl, TraceTypes.Received, data);
+                                cl.NotifyVerbose(cl, Resources.ReplyPacketReceivedIn + (DateTime.Now - it.SendTime).TotalMilliseconds.ToString() + Resources.Ms);
+                            }
+							//Gurux.Common.GXCommon.TraceWriteLine("Reply packet received in " + (DateTime.Now - it.SendTime).TotalMilliseconds.ToString() + " ms.");
                             if (it.Sender != null)
                             {
                                 it.Sender.NotifyReceived(new GXReceivedPacketEventArgs(it, true));
@@ -73,10 +65,6 @@ namespace Gurux.Communication
                     }
                 }
             }
-			if (Trace >= System.Diagnostics.TraceLevel.Info)
-			{
-				Gurux.Common.GXCommon.TraceWriteLine("GXServer receiver stopped.");
-			}
         }
     }
 }

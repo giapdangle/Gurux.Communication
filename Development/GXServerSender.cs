@@ -3,29 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Gurux.Common;
+using Gurux.Communication.Properties;
 
 namespace Gurux.Communication
 {
     class GXServerSender
     {
         public EventWaitHandle Closing = new EventWaitHandle(false, EventResetMode.ManualReset);
-        GXServer Parent;
-		System.Diagnostics.TraceLevel Trace = System.Diagnostics.TraceLevel.Off;
+        GXServer Parent;		
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="parent"></param>
         public GXServerSender(GXServer parent)
         {
-            Parent = parent;
-			if (Parent.Media != null)
-			{
-				Trace = Parent.Media.Trace;
-			}
-			else
-			{
-				Trace = System.Diagnostics.TraceLevel.Off;
-			}            
+            Parent = parent;			            
         }
 
         /////////////////////////////////////////////////////////////////////////////
@@ -50,15 +43,18 @@ namespace Gurux.Communication
             {
 				if (packet.Sender != null && packet.Sender.Trace >= System.Diagnostics.TraceLevel.Error)
 				{
-					Gurux.Common.GXCommon.TraceWriteLine("Failed to send packet " + packet.Id + ", delay " + (DateTime.Now - packet.SendTime).TotalMilliseconds.ToString());
+                    string str = Resources.FailedToSendPacket + packet.Id + ", delay " + (DateTime.Now - packet.SendTime).TotalMilliseconds.ToString();
+                    packet.Sender.NotifyVerbose(packet.Sender, str);
+					Gurux.Common.GXCommon.TraceWriteLine(str);
 				}
             }
             else
             {
 				if (packet.Sender != null && packet.Sender.Trace >= System.Diagnostics.TraceLevel.Info)
 				{
-					Gurux.Common.GXCommon.TraceWriteLine("Try to resend packet " + packet.Id.ToString() + " (" + packet.SendCount.ToString() + "/" + (packet.ResendCount + 1).ToString() + ")");
-					Gurux.Common.GXCommon.TraceWriteLine((DateTime.Now - packet.SendTime).TotalMilliseconds.ToString());
+                    string str = "Try to resend packet " + packet.Id.ToString() + " (" + packet.SendCount.ToString() + "/" + (packet.ResendCount + 1).ToString() + ")";
+                    packet.Sender.NotifyVerbose(packet.Sender, str);
+                    Gurux.Common.GXCommon.TraceWriteLine(str);					
 				}
             }
             return bReSend;
@@ -106,11 +102,9 @@ namespace Gurux.Communication
                     //If packet is not send yet.
                     if (it.Status == PacketStates.Ok)
                     {
-						if (Trace >= System.Diagnostics.TraceLevel.Info)
-						{
-							Gurux.Common.GXCommon.TraceWriteLine("New packet " + it.Id + " is ready to send");
-						}
-
+                        string str = "New packet " + it.Id + " is ready to send";
+                        it.Sender.NotifyVerbose(it.Sender, str);                        
+						//Gurux.Common.GXCommon.TraceWriteLine(str);                        
                         //Remove the packet if marked send as broadcast.
                         if (it.ResendCount == -1)
                         {
@@ -131,7 +125,7 @@ namespace Gurux.Communication
                         //If packet is reset by user.				
                         if (IsTransactionTimeReset(Parent.m_ReplyPacket))
                         {
-							if (Trace >= System.Diagnostics.TraceLevel.Info)
+                            if (it.Sender.Trace >= System.Diagnostics.TraceLevel.Info)
 							{
 								Gurux.Common.GXCommon.TraceWriteLine("Transaction time is reset.");
 							}
@@ -147,10 +141,10 @@ namespace Gurux.Communication
                         }
                         else //If the packet is old.
                         {
-							if (Trace >= System.Diagnostics.TraceLevel.Info)
-							{
-								Gurux.Common.GXCommon.TraceWriteLine("Packet " + it.Id.ToString() + " is old.");
-							}
+                            if (it.Sender != null)
+                            {
+                                it.Sender.NotifyVerbose(it.Sender, "Packet " + it.Id.ToString() + Resources.IsOld);
+                            }
                             // Mark packet received so sender don't try to push it into reply list twice.
                             it.Status = PacketStates.Timeout;
                             ++Parent.m_packetsLost;
@@ -161,10 +155,7 @@ namespace Gurux.Communication
                             }
                             else // If the packet is old and sent as broadcast, write notify.
                             {
-								if (Trace >= System.Diagnostics.TraceLevel.Info)
-								{
-									Gurux.Common.GXCommon.TraceWriteLine("Packet is old and send broadcast.");
-								}
+                                it.Sender.NotifyVerbose(it.Sender, Resources.PacketIsOldAndSendBroadcast);
                                 Parent.m_SendPackets.Remove(it);
                                 --cnt;
                                 --pos;
@@ -191,10 +182,8 @@ namespace Gurux.Communication
             }
             if (wt != -1)
             {
-				if (Trace >= System.Diagnostics.TraceLevel.Info)
-				{
-					Gurux.Common.GXCommon.TraceWriteLine("Wait " + wt.ToString() + " ms. before try to send packet again.");
-				}
+                string str = "Wait " + wt.ToString() + " ms. before try to send packet again.";
+				//Gurux.Common.GXCommon.TraceWriteLine(str);
             }
             return null;
         }
@@ -204,10 +193,6 @@ namespace Gurux.Communication
         public void Run()
         {
             GXPacket it = null;
-            if (Trace >= System.Diagnostics.TraceLevel.Info)
-            {
-                Gurux.Common.GXCommon.TraceWriteLine("GXServer sender started.");
-            }
             while (!Closing.WaitOne(0))
             {
                 try
@@ -241,12 +226,11 @@ namespace Gurux.Communication
                                 it.SendTime = DateTime.Now;
                                 it.Status = PacketStates.Sent;
                             }
-                            byte[] buff = it.ExtractPacket();
-                            Parent.WriteLog(true, buff);
+                            byte[] buff = it.ExtractPacket();                            
                             object data = buff;
-                            if (Trace == System.Diagnostics.TraceLevel.Verbose)
-                            {
-                                Gurux.Common.GXCommon.TraceWriteLine("Send data: " + BitConverter.ToString((byte[])data));
+                            if (it.Sender.Trace == System.Diagnostics.TraceLevel.Verbose)
+                            {                                
+                                it.Sender.NotifyVerbose(it.Sender, Gurux.Common.TraceTypes.Sent, buff);
                             }
                             Parent.Media.Send(data, null);
                             it = null;
@@ -255,10 +239,7 @@ namespace Gurux.Communication
                 }
                 catch (Exception Ex)
                 {
-					if (Trace >= System.Diagnostics.TraceLevel.Error)
-					{
-						Gurux.Common.GXCommon.TraceWriteLine("An exception has occurred in GXServerSender.Run: " + Ex.Message + Environment.NewLine + Ex.StackTrace);
-					}
+					Gurux.Common.GXCommon.TraceWriteLine("An exception has occurred in GXServerSender.Run: " + Ex.Message + Environment.NewLine + Ex.StackTrace);
                     if (it != null)
                     {
 						it.Status = PacketStates.SendFailed;
@@ -269,10 +250,6 @@ namespace Gurux.Communication
                         cl.NotifyError(cl, Ex);
                     }
                 }
-            }
-            if (Trace >= System.Diagnostics.TraceLevel.Info)
-            {
-                Gurux.Common.GXCommon.TraceWriteLine("GXServer sender stopped.");
             }
         }
     }

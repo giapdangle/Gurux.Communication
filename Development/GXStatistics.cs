@@ -48,8 +48,7 @@ namespace Gurux.Communication
         {
 
         }
-
-        internal GXClient Parent;
+        
         UInt64 m_PacketsSend, m_PacketsReceived, m_BytesReceived, m_BytesSend;
         private readonly object m_sync = new object();
 

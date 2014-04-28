@@ -39,6 +39,7 @@ using System.Threading;
 using System.IO;
 using Gurux.Common;
 using System.Diagnostics;
+using Gurux.Communication.Properties;
 
 namespace Gurux.Communication
 {
@@ -62,38 +63,7 @@ namespace Gurux.Communication
         internal UInt64 m_packetsLost;
         Gurux.Common.IGXMedia m_Media;
         string m_Name;
-        TextWriter m_LogWriter;
-        string m_LogFilePath;        
-        
-        public string LogFilePath
-        {
-            get
-            {
-                return m_LogFilePath;
-            }
-            set
-            {
-                m_LogFilePath = value;
-                if (string.IsNullOrEmpty(value))
-                {
-                    if (m_LogWriter != null)
-                    {                        
-                        m_LogWriter.Close();
-                        m_LogWriter.Dispose();
-                        m_LogWriter = null;
-                    }
-                }
-                else
-                {                                        
-                    StreamWriter sw = new StreamWriter(new FileStream(value, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite));
-                    sw.AutoFlush = true;
-                    m_LogWriter = sw;
-                    GXFileSystemSecurity.UpdateFileSecurity(value);
-                    m_LogWriter.WriteLine("Log created " + DateTime.Now.ToLongTimeString());
-                }
-            }
-        }
-
+               
         private static volatile Dictionary<string, GXServer> m_instances;
         private static object m_syncRoot = new object();
         internal object m_SyncCommunication = new object();
@@ -120,27 +90,27 @@ namespace Gurux.Communication
                     server = m_instances[name];
                     if (server.m_bParseReceivedPacket != client.ParseReceivedPacket)
                     {
-                        throw new Exception("Server failed to accept new client. ParseReceivedPacket value is invalid.");
+                        throw new Exception(Resources.ServerFailedToAcceptNewClientParseReceivedPacketValueIsInvalid);
                     }
 					if (!object.Equals(server.m_ReplyPacket.Eop, client.Eop))
                     {
-                        throw new Exception("Server failed to accept new client. Eop value is invalid.");
+                        throw new Exception(Resources.ServerFailedToAcceptNewClientEopValueIsInvalid);
                     }
                     if (!object.Equals(server.m_ReplyPacket.Bop, client.Bop))
                     {
-                        throw new Exception("Server failed to accept new client. Bop value is invalid.");
+                        throw new Exception(Resources.ServerFailedToAcceptNewClientBopValueIsInvalid);
                     }
                     if (server.m_ReplyPacket.ByteOrder != client.ByteOrder)
                     {
-                        throw new Exception("Server failed to accept new client. ByteOrders are not same.");
+                        throw new Exception(Resources.ServerFailedToAcceptNewClientByteOrdersAreNotSame);
                     }
                     if (server.m_ReplyPacket.MinimumSize != client.MinimumSize)
                     {
-                        throw new Exception("Server failed to accept new client. MinimumSize value is invalid.");
+                        throw new Exception(Resources.ServerFailedToAcceptNewClientMinimumSizeValueIsInvalid);
                     }
                     if (!server.m_ReplyPacket.ChecksumSettings.Equals(client.ChecksumSettings))
                     {
-                        throw new Exception("Server failed to accept new client. ChecksumSettings are not same.");
+                        throw new Exception(Resources.ServerFailedToAcceptNewClientChecksumSettingsAreNotSame);
                     }                    
                     lock (server.Clients.SyncRoot)
                     {
@@ -258,7 +228,11 @@ namespace Gurux.Communication
             try
             {
                 byte[] buff = (byte[])data.Data;
-                WriteLog(false, buff);
+                string str = Gurux.Common.GXCommon.ToHex(buff, true);
+                foreach (GXClient cl in Clients)
+                {
+                    cl.NotifyVerbose(sender, Gurux.Common.TraceTypes.Received, str);
+                }
                 GXClient client = null;
                 lock (Clients.SyncRoot)
                 {
@@ -275,7 +249,7 @@ namespace Gurux.Communication
                 {
 					if (this.m_Media.Trace >= System.Diagnostics.TraceLevel.Info)
 					{
-						Gurux.Common.GXCommon.TraceWriteLine("NotifyReceiveData failed data.");
+                        client.NotifyVerbose(client, Resources.ClientToNotAcceptData + BitConverter.ToString(buff).Replace('-', ' '));
 					}
                     return;
                 }
@@ -344,7 +318,8 @@ namespace Gurux.Communication
                                 {
                                     m_replyBuffer.Clear();
                                 }
-                                Gurux.Common.GXCommon.TraceWriteLine("Corrupted data.");
+                                client.NotifyVerbose(client, Resources.CorruptedData);
+                                Gurux.Common.GXCommon.TraceWriteLine(Resources.CorruptedData);
                                 return;
                             }
                             else if (e.State == ParseStatus.Incomplete)
@@ -400,7 +375,14 @@ namespace Gurux.Communication
 								{
 									if (this.m_Media.Trace >= System.Diagnostics.TraceLevel.Info)
 									{
-										Gurux.Common.GXCommon.TraceWriteLine("Received packet is not accepted..");
+                                        if (!string.IsNullOrEmpty(e.Description))
+                                        {
+                                            client.NotifyVerbose(client, e.Description);                                            
+                                        }
+                                        else
+                                        {
+                                            client.NotifyVerbose(client, Resources.ReceivedPacketIsNotAccepted);                                            
+                                        }
 									}
 									break;
 								}
@@ -520,16 +502,15 @@ namespace Gurux.Communication
             {
 				if (packet.Sender == null)
 				{
-					throw new Exception("Invalid Sender.");
+					throw new Exception(Resources.InvalidSender);
 				}
                 packet.Id = ++m_PacketIdCounter;
                 //If packet is send asyncronously.
                 if (packet.ResendCount == -1)
                 {
                     byte[] buff = packet.ExtractPacket();
-                    WriteLog(true, buff);
-                    object data = buff;
-                    Media.Send(data, null);
+                    packet.Sender.NotifyVerbose(packet.Sender, TraceTypes.Sent, buff);                    
+                    Media.Send(buff, null);
                 }
                 else
                 {
@@ -559,21 +540,6 @@ namespace Gurux.Communication
                 lock (m_syncRoot)
                 {
                     m_Media = value;
-                }
-            }
-        }
-
-        internal void WriteLog(bool send, byte[] data)
-        {
-            if (m_LogWriter != null)
-            {
-                if (send)
-                {
-                    m_LogWriter.WriteLine("<- " + BitConverter.ToString(data));
-                }
-                else
-                {
-                    m_LogWriter.WriteLine("-> " + BitConverter.ToString(data));
                 }
             }
         }

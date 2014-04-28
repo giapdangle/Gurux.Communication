@@ -38,6 +38,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Gurux.Communication.Common;
 using System.Runtime.Serialization;
+using Gurux.Communication.Properties;
 
 namespace Gurux.Communication
 {
@@ -245,7 +246,7 @@ namespace Gurux.Communication
                 {
                     if (this.ChecksumSettings.Size != 8 && this.ChecksumSettings.Size != 16 && this.ChecksumSettings.Size != 24 && this.ChecksumSettings.Size != 32)
                     {
-                        throw new Exception("Checksum size is invalid.");
+                        throw new Exception(Resources.ChecksumSizeIsInvalid);
                     }
                     m_crc = new CRCCTemplate(this.ChecksumSettings.Size, this.ChecksumSettings.Polynomial, this.ChecksumSettings.InitialValue, this.ChecksumSettings.FinalXOR, this.ChecksumSettings.ReverseData, this.ChecksumSettings.Reflection);
                     this.ChecksumSettings.Dirty = false;
@@ -374,7 +375,7 @@ namespace Gurux.Communication
         /// <returns>Extracted packet.</returns>
         public override string ToString()
         {
-            return BitConverter.ToString(ExtractPacket()).Replace('-', ' ');
+            return Gurux.Common.GXCommon.ToHex(ExtractPacket(), true);            
         }        
 
         /// <summary>
@@ -618,7 +619,7 @@ namespace Gurux.Communication
                 {                    
                     if (this.m_ChecksumSettings.Size == 0)
                     {
-                        throw new Exception("Checksum size is invalid.");
+                        throw new Exception(Resources.ChecksumSizeIsInvalid);
                     }
                     else
                     {

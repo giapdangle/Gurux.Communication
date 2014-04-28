@@ -42,6 +42,7 @@ using System.Reflection;
 using Gurux.Common;
 using System.IO;
 using System.Diagnostics;
+using Gurux.Communication.Properties;
 
 namespace Gurux.Communication
 {
@@ -82,8 +83,7 @@ namespace Gurux.Communication
         object m_Eop;
         [DataMember(Name = "ByteOrder", IsRequired = false, EmitDefaultValue = false)]
         ByteOrder m_ByteOrder;
-
-        string m_LogFilePath;
+        
         private ManualResetEvent m_replyEvent = new ManualResetEvent(false);
         GXServer m_Server;
         private object m_sync = new object();
@@ -214,7 +214,11 @@ namespace Gurux.Communication
         /// Returns string collection of available media types.
         /// </summary>
         /// <param name="connected">If true, returns only connected medias otherwice returns all medias.</param>
-        /// <returns>available medias.</returns>
+        /// <returns>Collection of available medias.</returns>
+        /// <remarks>
+        /// Connected parameter is used because there might be that there is example GXSerial dll that can load, but
+        /// there are no physical serial ports. In this situation serial port is not returned.
+        /// </remarks>
         public static string[] GetAvailableMedias(bool connected)
         {
             lock (m_MediaTypeCache)
@@ -277,6 +281,24 @@ namespace Gurux.Communication
                         foreach (var it in pc.Medias)
                         {
                             m_MediaTypeCache.Add(it.Key, it.Value);
+                        }
+                        //Find medias from current directory.
+                        pc.Medias.Clear();
+                        Assembly entry = Assembly.GetEntryAssembly();
+                        if (entry == null)
+                        {
+                            entry = Assembly.GetExecutingAssembly();
+                        }
+                        if (entry != null)
+                        {
+                            pc.FindMedias(Path.GetDirectoryName(entry.Location), ignoredMedias);
+                            foreach (var it in pc.Medias)
+                            {
+                                if (!m_MediaTypeCache.ContainsKey(it.Key))
+                                {
+                                    m_MediaTypeCache.Add(it.Key, it.Value);
+                                }
+                            }
                         }
                     }
                     finally
@@ -483,29 +505,10 @@ namespace Gurux.Communication
                         return media;
                     }
                 }
-                throw new Exception("Unknown media: " + mediaType);
+                throw new Exception(Resources.UnknownMedia + mediaType);
             }
         }
-        
-        /// <summary>
-        /// Log file path.
-        /// </summary>
-        public string LogFilePath
-        {
-            get
-            {
-                return m_LogFilePath;
-            }
-            set
-            {
-                m_LogFilePath = value;
-                if (m_Server != null)
-                {
-                    m_Server.LogFilePath = value;
-                }                
-            }
-        }
-
+                
         /// <summary>
         /// Assigns new media, after media settings are changed.
         /// </summary>
@@ -539,8 +542,7 @@ namespace Gurux.Communication
                 NotifyLoad();
                 //Notify that media is changed.
                 NotifyMediaStateChange(MediaState.Changed);
-                m_Server = GXServer.Instance(media, this);
-                m_Server.LogFilePath = m_LogFilePath;
+                m_Server = GXServer.Instance(media, this);                
                 //Notify is media is already open.
                 if (media.IsOpen)
                 {
@@ -677,14 +679,11 @@ namespace Gurux.Communication
         /// It is recommended to use Close method, instead of MediaClose. 
         /// </summary>
         /// <seealso cref="CloseMedia">CloseMedia</seealso> 
-        internal void CloseServer()
+        public void CloseServer()
         {
             if (m_Server != null)
             {
-				if (Trace >= System.Diagnostics.TraceLevel.Info)
-				{
-					Gurux.Common.GXCommon.TraceWriteLine("GXClient closes server.");
-				}                
+                NotifyVerbose(this, Resources.ClientClosesServer);
                 GXServer.Release(m_Server, this);
                 m_Server = null;
                 NotifyUnload();
@@ -716,7 +715,7 @@ namespace Gurux.Communication
         {
             if (m_Server == null)
             {
-                throw new Exception("Server not created. Call AssignMedia first.");
+                throw new Exception(Resources.ServerNotCreatedCallAssignMediaFirst);
             }			
             if (m_Server.Media != null)
             {
@@ -749,15 +748,15 @@ namespace Gurux.Communication
         {
             if (m_Server == null)
             {
-                throw new Exception("Server not created. Call AssignMedia first.");
+                throw new Exception(Resources.ServerNotCreatedCallAssignMediaFirst);
             }
             if (packet.ByteOrder != this.ByteOrder)
             {
-                throw new Exception("Packet's byte order is not same as client's.");
+                throw new Exception(Resources.PacketSByteOrderIsNotSameAsClientS);
             }
             if (packet.WaitTime == 0 && packet.ResendCount != -1)
             {
-                throw new Exception("Packet's wait time can't be Zero.");
+                throw new Exception(Resources.PacketSWaitTimeCanTBeZero);
             }
             if (m_Server.m_SendPackets.Count > 0)
             {
@@ -861,7 +860,7 @@ namespace Gurux.Communication
         {
             if (m_Server != null)
             {
-                throw new Exception("Server not created. Call AssignMedia first.");
+                throw new Exception(Resources.ServerNotCreatedCallAssignMediaFirst);
             }
         }       
 
@@ -985,7 +984,7 @@ namespace Gurux.Communication
         {
             if (m_Server == null)
             {
-                throw new Exception("Server not created. Call AssignMedia first.");
+                throw new Exception(Resources.ServerNotCreatedCallAssignMediaFirst);
             }
             return (GXClient[]) m_Server.Clients.ToArray();
         }
@@ -1162,7 +1161,7 @@ namespace Gurux.Communication
                 {
                     return m_Server.m_SyncCommunication;
                 }
-                throw new Exception("Connection not initialized.");
+                throw new Exception(Resources.ConnectionNotInitialized);
             }
         }
         
@@ -1332,6 +1331,22 @@ namespace Gurux.Communication
             if (OnMediaStateChange != null)
             {
                 OnMediaStateChange(this, new MediaStateEventArgs(state));
+            }
+        }
+
+        internal void NotifyVerbose(object sender, object data)
+        {            
+            if (Trace == TraceLevel.Verbose && m_OnTrace != null)
+            {
+                m_OnTrace(sender, new TraceEventArgs(TraceTypes.Info, data));
+            }
+        }
+
+        internal void NotifyVerbose(object sender, TraceTypes type, object data)
+        {
+            if (Trace == TraceLevel.Verbose && m_OnTrace != null)
+            {
+                m_OnTrace(sender, new TraceEventArgs(type, data));
             }
         }
 

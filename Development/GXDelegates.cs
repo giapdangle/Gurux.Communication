@@ -204,6 +204,16 @@ namespace Gurux.Communication
         }
 
         /// <summary>
+        /// Description why packet is not accepted.
+        /// </summary>
+        public string Description
+        {
+            get;
+            set;
+        }
+
+
+        /// <summary>
         /// Default constructor
         /// </summary>
         internal GXReplyPacketEventArgs(GXPacket send, GXPacket received)

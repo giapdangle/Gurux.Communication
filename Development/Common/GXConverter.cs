@@ -34,6 +34,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Gurux.Communication.Properties;
 
 namespace Gurux.Communication.Common
 {
@@ -106,7 +107,7 @@ namespace Gurux.Communication.Common
             }
             else
             {
-                throw new Exception("Invalid data format.");
+                throw new Exception(Resources.InvalidDataFormat);
             }
             //Swap bytes if different byte order is used.
             if (swap)
@@ -130,7 +131,7 @@ namespace Gurux.Communication.Common
                 int idLow = b & 0x0F;
                 if (idHigh > 9 || idLow > 9)
                 {
-                    throw new ArgumentException("Invalid BCD format: 0x{0}.", Convert.ToString(b, 16));
+                    throw new ArgumentException(Resources.InvalidBCDFormat + Convert.ToString(b, 16));
                 }                 
                 bcd.Append(string.Format("{0}{1}", idHigh, idLow));                
             }

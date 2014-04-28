@@ -70,6 +70,11 @@
     <Compile Include="PacketStates.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="GXServer.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Gurux.Communication.snk" />
@@ -79,6 +84,12 @@
       <Project>{749652D4-4779-4869-AD81-5211A661CD1B}</Project>
       <Name>Gurux.Common_2008</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Shared\" />
