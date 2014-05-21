@@ -117,6 +117,15 @@ namespace Gurux.Communication
             }
         }
 
+
+        /// <summary>
+        /// Cancels packet sending.
+        /// </summary>
+        public void Cancel()
+        {
+            m_Server.Cancel();            
+        }
+
         /// <summary>
         /// Destructor.
         /// </summary>
@@ -526,6 +535,12 @@ namespace Gurux.Communication
         /// <seealso cref="Properties">Properties</seealso> 
         public void AssignMedia(Gurux.Common.IGXMedia media)
         {
+            IGXMediaContainer tmp = media as IGXMediaContainer;
+            if (tmp != null)
+            {                
+                media = (media as IGXMediaContainer).Media;
+                media.MediaContainer = tmp;
+            }
             CloseServer();
             m_MediaType = "";
             if (media != null)
@@ -574,6 +589,10 @@ namespace Gurux.Communication
                 if (m_Server == null)
                 {
                     return null;
+                }
+                if (m_Server.Media.MediaContainer != null)
+                {
+                    return m_Server.Media.MediaContainer as IGXMedia;
                 }
                 return m_Server.Media;
             }
@@ -657,16 +676,22 @@ namespace Gurux.Communication
             {
                 if (m_Server != null && m_Server.Media != null)
                 {
+                    IGXMediaContainer tmp = m_Server.Media.MediaContainer as IGXMediaContainer;
+                    if (tmp != null)
+                    {
+                        return (tmp as IGXMedia).MediaType;
+                    }
                     return m_Server.Media.MediaType;
                 }
                 return m_MediaType;
             }
             set
             {
+                //Media type is used on serialization.
+                //For this reason it's skipped if server is already created.
                 if (m_Server != null && m_Server.Media != null)
                 {
-                    return;
-                    //m_Server.Media.MediaTypeAsString;
+                    return;                 
                 }
                 m_MediaType = value;
             }
@@ -1338,7 +1363,7 @@ namespace Gurux.Communication
         {            
             if (Trace == TraceLevel.Verbose && m_OnTrace != null)
             {
-                m_OnTrace(sender, new TraceEventArgs(TraceTypes.Info, data));
+                m_OnTrace(sender, new TraceEventArgs(TraceTypes.Info, data, null));
             }
         }
 
@@ -1346,7 +1371,7 @@ namespace Gurux.Communication
         {
             if (Trace == TraceLevel.Verbose && m_OnTrace != null)
             {
-                m_OnTrace(sender, new TraceEventArgs(type, data));
+                m_OnTrace(sender, new TraceEventArgs(type, data, null));
             }
         }
 
@@ -1368,7 +1393,7 @@ namespace Gurux.Communication
             //Do not send trace from media errors. Media sends them.
             if (sender == this && Trace >= TraceLevel.Error && m_OnTrace != null)
             {
-                m_OnTrace(this, new TraceEventArgs(TraceTypes.Error, ex));
+                m_OnTrace(this, new TraceEventArgs(TraceTypes.Error, ex, null));
             }
         }
 

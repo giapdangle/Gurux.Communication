@@ -54,6 +54,6 @@ using System.Runtime.InteropServices;
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("f3453892-0a65-40d7-84d4-2e0ebeb92ba0")]
 [assembly: AssemblyVersion("7.0.2.1")] //DO NOT CHANGE!
-[assembly: AssemblyFileVersion("7.0.14.1")]
+[assembly: AssemblyFileVersion("7.0.16.1")]
 //[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Gurux.Device, PublicKey=0024000004800000940000000602000000240000525341310004000001000100656993d23e652554c2f0e03588aaaa2d4ce225ebec0b8723f0f8cae2d77222db2cb76ccb4accc3c5eccdf9f35b389950f214d33d165a04bebbafb5376818bf2f8930428b1dded90c318ffabd947a41f57c4c8059cee788916eac94288f6aa85479ed7167e0234e9cd2bd77968b24882fe0793793aec835bfabd5ffdbcb3ad8a4")]
 [assembly: System.Resources.NeutralResourcesLanguage("en")]

@@ -162,6 +162,29 @@ namespace Gurux.Communication
             }
         }
 
+        /// <summary>
+        /// Cancel all packets.
+        /// </summary>
+        internal void Cancel()
+        {
+            lock (m_SendPackets.SyncRoot)
+            {
+                lock (m_ReceicedPackets.SyncRoot)
+                {
+                    for (int i = 0; i < m_SendPackets.Count; ++i)
+                    {
+                        GXPacket it = (GXPacket)m_SendPackets[i];
+                        lock (it.SyncRoot)
+                        {
+                            it.Status = PacketStates.Timeout;
+                        }
+                        AddPacketToReceivedBuffer(it);
+                    }
+                }
+            }
+            m_replyBuffer.Clear();
+        }
+
         void OnMediaStateChange(object sender, MediaStateEventArgs e)
         {            
             try
@@ -177,24 +200,9 @@ namespace Gurux.Communication
                 }
                 else if (e.State == MediaState.Closed)
                 {
-                    lock (m_SendPackets.SyncRoot)
-                    {
-                        lock (m_ReceicedPackets.SyncRoot)
-                        {
-                            for (int i = 0; i < m_SendPackets.Count; ++i)
-                            {
-                                GXPacket it = (GXPacket)m_SendPackets[i];
-								lock (it.SyncRoot)
-								{
-									it.Status = PacketStates.Timeout;
-								}
-                                AddPacketToReceivedBuffer(it);
-                            }
-                        }
-                    }
-                    m_replyBuffer.Clear();
+                    Cancel();                   
                 }
-				//TODO: clientteja poistetaan kun devicelistaa ajetaan alas
+				//TODO: clients are removed when device list is cleared.
                 foreach (GXClient it in Clients)
                 {
                     try
@@ -381,7 +389,8 @@ namespace Gurux.Communication
                                         }
                                         else
                                         {
-                                            client.NotifyVerbose(client, Resources.ReceivedPacketIsNotAccepted);                                            
+                                            client.NotifyVerbose(client, Resources.ReceivedPacketIsNotAccepted + 
+                                                " " + m_ReplyPacket.ToString());                                            
                                         }
 									}
 									break;
