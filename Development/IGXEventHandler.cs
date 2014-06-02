@@ -1,4 +1,4 @@
-//
+﻿//
 // --------------------------------------------------------------------------
 //  Gurux Ltd
 // 
@@ -34,33 +34,42 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
 namespace Gurux.Communication
 {
     /// <summary>
-    /// Available media state changes.
+    /// Interface that handles received events.
     /// </summary>
-    public enum MediaState : int
+    /// <remarks>
+    /// There is only one instance of event handler.
+    /// </remarks>
+    public interface IGXEventHandler
     {
         /// <summary>
-        /// Media is closed.
+        /// Collection of clients.
         /// </summary>
-        Closed = 1,
+        object Clients
+        {
+            get;
+            set;
+        }
+
         /// <summary>
-        /// Media is open. 
+        /// New media is connected.
         /// </summary>
-        Open = 2,
+        /// <param name="ConnectionInfo"></param>
+        void ClientConnected(string ConnectionInfo);
+        
         /// <summary>
-        /// Media is opening.
+        /// Media is disconnected.
         /// </summary>
-        Opening = 3,
+        /// <param name="ConnectionInfo"></param>
+        void ClientDisconnected(string ConnectionInfo);
+
         /// <summary>
-        /// Media is closing.
+        /// Find device when event data is received from the meter.
         /// </summary>
-        Closing = 4,
-        /// <summary>
-        /// GXClients Media type has changed.
-        /// </summary>
-        Changed = 5
+        /// <param name="e"></param>
+        /// <returns>Return false if data i </returns>
+        void NorifyEvent(GXNotifyEventArgs e);                
     }
 }

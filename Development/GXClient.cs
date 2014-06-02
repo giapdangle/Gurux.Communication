@@ -360,7 +360,36 @@ namespace Gurux.Communication
                 }
             }
         }
-        
+             
+        IGXEventHandler Handler;
+        object Clients;
+        /// <summary>
+        /// Add event handler.
+        /// </summary>
+        /// <param name="handler"></param>
+        /// <param name="clients">Collection of clients that this handler can handle</param>
+        public void AddEventHandler(IGXEventHandler handler, object clients)
+        {
+            if (m_Server == null)
+            {
+                Handler = handler;
+                Clients = clients;                
+            }
+            else
+            {
+                m_Server.AddEventHandler(handler, clients);
+            }
+        }
+
+        /// <summary>
+        /// Remove event handler.
+        /// </summary>
+        /// <param name="handler"></param>
+        public void RemoveEventHandler(IGXEventHandler handler)
+        {
+            m_Server.RemoveEventHandler(handler);
+        }
+
         /// <summary>
         /// Checksum parameters.
         /// </summary>        
@@ -557,7 +586,14 @@ namespace Gurux.Communication
                 NotifyLoad();
                 //Notify that media is changed.
                 NotifyMediaStateChange(MediaState.Changed);
-                m_Server = GXServer.Instance(media, this);                
+                m_Server = GXServer.Instance(media, this);
+                //If handler is given before server is up.
+                if (Handler != null)
+                {
+                    m_Server.AddEventHandler(Handler, Clients);
+                    Handler = null;
+                    Clients = null;
+                }
                 //Notify is media is already open.
                 if (media.IsOpen)
                 {
@@ -786,9 +822,7 @@ namespace Gurux.Communication
             if (m_Server.m_SendPackets.Count > 0)
             {
                 return;
-            }
-
-            packet.SenderInfo = null;
+            }            
             packet.Sender = this;
             ++Statistics.PacketsSend;
             NotifyBeforeSend(packet);

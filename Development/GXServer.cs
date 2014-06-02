@@ -63,10 +63,40 @@ namespace Gurux.Communication
         internal UInt64 m_packetsLost;
         Gurux.Common.IGXMedia m_Media;
         string m_Name;
-               
+        static Dictionary<IGXEventHandler, object> Handlers;               
         private static volatile Dictionary<string, GXServer> m_instances;
         private static object m_syncRoot = new object();
         internal object m_SyncCommunication = new object();
+
+        /// <summary>
+        /// Add event handler.
+        /// </summary>
+        /// <param name="handler"></param>
+        public void AddEventHandler(IGXEventHandler handler, object clients)
+        {
+            lock (Handlers)
+            {
+                if (!Handlers.ContainsKey(handler))
+                {
+                    Handlers.Add(handler, clients);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Remove event handler.
+        /// </summary>
+        /// <param name="handler"></param>
+        public void RemoveEventHandler(IGXEventHandler handler)
+        {
+            lock(Handlers)
+            {
+                if (Handlers.ContainsKey(handler))
+                {
+                    Handlers.Remove(handler);
+                }
+            }
+        }
 
         /// <summary>
         /// GXServer class factory.
@@ -78,6 +108,7 @@ namespace Gurux.Communication
                 if (m_instances == null)
                 {
                     m_instances = new Dictionary<string, GXServer>();
+                    Handlers = new Dictionary<IGXEventHandler, object>();
                 }
                 string name = media.Name;
                 if (string.IsNullOrEmpty(name))
@@ -143,14 +174,22 @@ namespace Gurux.Communication
                 return server;
             }
         }
-        
-        void OnClientDisconnected(object sender, object info)
+
+        void OnClientDisconnected(object sender, ConnectionEventArgs e)
         {
+            foreach (var it in Handlers)
+            {
+                it.Key.ClientDisconnected(e.Info);
+            }
             //TODO: throw new NotImplementedException();
         }
 
-        void OnClientConnected(object sender, object info)
+        void OnClientConnected(object sender, ConnectionEventArgs e)
         {
+            foreach (var it in Handlers)
+            {
+                it.Key.ClientConnected(e.Info);
+            }
             //TODO: throw new NotImplementedException();
         }
 
@@ -418,7 +457,35 @@ namespace Gurux.Communication
                         //If packet sender not found, send packet to all clients.
                         if (replyPacket == null)
                         {
-                            GXReplyPacketEventArgs e = new GXReplyPacketEventArgs(null, m_ReplyPacket);
+                            GXReplyPacketEventArgs e;
+                            lock (Handlers)
+                            {
+                                GXNotifyEventArgs fc = new GXNotifyEventArgs(m_ReplyPacket, data.SenderInfo);
+                                foreach (var it in Handlers)
+                                {
+                                    it.Key.NorifyEvent(fc);
+                                    if (fc.Handled)
+                                    {
+                                        if (fc.Client != null)
+                                        {
+                                            e = new GXReplyPacketEventArgs(null, m_ReplyPacket);
+                                            fc.Client.NotifyAcceptNotify(e);
+                                            if (!e.Accept)
+                                            {
+                                                return;
+                                            }
+                                            fc.Client.NotifyReceived(new GXReceivedPacketEventArgs(m_ReplyPacket, false));
+                                        }
+                                        m_ReplyPacket.ClearData();
+                                        if (fc.Reply != null)
+                                        {
+                                            Send(fc.Reply);
+                                        }
+                                        return;
+                                    }
+                                }
+                            }
+                            e = new GXReplyPacketEventArgs(null, m_ReplyPacket);
                             client.NotifyAcceptNotify(e);
                             if (!e.Accept)
                             {
@@ -518,8 +585,8 @@ namespace Gurux.Communication
                 if (packet.ResendCount == -1)
                 {
                     byte[] buff = packet.ExtractPacket();
-                    packet.Sender.NotifyVerbose(packet.Sender, TraceTypes.Sent, buff);                    
-                    Media.Send(buff, null);
+                    packet.Sender.NotifyVerbose(packet.Sender, TraceTypes.Sent, buff);
+                    Media.Send(buff, packet.SenderInfo);
                 }
                 else
                 {

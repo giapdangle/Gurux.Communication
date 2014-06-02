@@ -88,7 +88,7 @@ namespace Gurux.Communication
         }
 
 		/// <summary>
-		/// Is the packet answer to a request or a notification from the device.
+		/// Is the packet answer to a request or a notification (event) from the device.
 		/// </summary>
         public bool Answer
         {
@@ -103,6 +103,74 @@ namespace Gurux.Communication
         {
             Packet = packet;
             Answer = answer;
+        }
+    }
+
+
+    /// <summary>
+    /// An argument class for received packet.
+    /// </summary>
+    [DataContract()]
+    public class GXNotifyEventArgs : EventArgs
+    {
+        /// <summary>
+        /// The received packet.
+        /// </summary>
+        public GXPacket Packet
+        {
+            get;
+            internal set;
+        }
+
+        /// <summary>
+        /// Client that is receiving data.
+        /// </summary>
+        /// <remarks>
+        /// If received event is handled in event handler set this to null.
+        /// </remarks>
+        public GXClient Client
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Media depend sender information.
+        /// </summary>
+        public string SenderInfo
+        {
+            get;
+            internal set;
+        }
+
+        /// <summary>
+        /// Is the packet handled.
+        /// </summary>
+        public bool Handled
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Reply packet.
+        /// </summary>
+        /// <remarks>
+        /// Set reply packet is server needs example ACK.
+        /// </remarks>
+        public GXPacket Reply
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        internal GXNotifyEventArgs(GXPacket packet, string senderInfo)
+        {
+            SenderInfo = senderInfo;
+            Packet = packet;
         }
     }
 
@@ -421,4 +489,12 @@ namespace Gurux.Communication
     /// <param name="sender">The source of the event.</param>
     /// <param name="e"></param>
     public delegate void VerifyPacketEventHandler(object sender, GXVerifyPacketEventArgs e);
+
+    /// <summary>
+    /// Find client by received data.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    /// <returns></returns>
+    public delegate void FindClient(object sender, GXNotifyEventArgs e);                
 }

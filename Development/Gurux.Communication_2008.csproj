@@ -64,6 +64,7 @@
     <Compile Include="GXServerReceiver.cs" />
     <Compile Include="GXServerSender.cs" />
     <Compile Include="GXStatistics.cs" />
+    <Compile Include="IGXEventHandler.cs" />
     <Compile Include="IGXPacketParser.cs" />
     <Compile Include="NamespaceDoc.cs" />
     <Compile Include="PacketParts.cs" />
