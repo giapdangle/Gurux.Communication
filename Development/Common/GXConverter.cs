@@ -118,7 +118,7 @@ namespace Gurux.Communication.Common
         }
 
         /// <summary>
-        /// Converts BCD (Binary Coded Desimal) to string.
+        /// Converts BCD (Binary Coded Decimal) to string.
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
@@ -139,7 +139,7 @@ namespace Gurux.Communication.Common
         }
 
         /// <summary>
-        /// Converts string to BCD (Binary Coded Desimal).
+        /// Converts string to BCD (Binary Coded Decimal).
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>

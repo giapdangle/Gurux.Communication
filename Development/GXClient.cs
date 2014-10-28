@@ -239,6 +239,10 @@ namespace Gurux.Communication
                     //Find loaded Medias.
                     foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
                     {
+                        if (GXCommon.IsDefaultAssembly(asm))
+                        {
+                            continue;
+                        }
                         try
                         {
                             foreach (Type type in asm.GetTypes())

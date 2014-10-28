@@ -88,7 +88,7 @@ namespace Gurux.Communication
                 return m_sync;
             }
         }
-
+        
         /// <summary>
         /// Constructor.
         /// </summary>
